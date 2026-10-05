@@ -1,0 +1,85 @@
+PRACTICAL 1 - MONGODB BASICS
+============================
+
+START
+-----
+CMD 1:
+    mongod
+
+CMD 2:
+    mongo
+
+BASIC DATABASE COMMANDS
+-----------------------
+show dbs
+use BDNS
+db
+show dbs
+
+Create/select a database:
+    use BDNS
+
+NOTE:
+A database normally becomes visible in "show dbs" after data is inserted.
+
+COLLECTION COMMANDS
+-------------------
+db.createCollection("student")
+db.createCollection("teacher")
+show collections
+
+INSERT DOCUMENTS
+----------------
+db.student.insert({name:"Aarush", age:20, dept:"IT"})
+db.teacher.insert({name:"Teacher1", subject:"BDNS"})
+
+Display:
+    db.student.find()
+    db.teacher.find()
+
+Implicit collection creation + insert:
+    db.student2.insert({name:"Aarush", rollno:269729})
+
+SPECIFIED _id
+-------------
+db.student.insert({_id:1, name:"Aarush", rollno:269729})
+
+Trying the same _id again produces a duplicate-key error:
+    db.student.insert({_id:1, name:"Another"})
+
+DELETE DOCUMENTS
+---------------
+Delete all documents from a collection (old shell syntax used in practical):
+    db.nonteaching.remove({})
+
+Delete matching documents:
+    db.student.remove({name:"Aarush"})
+
+DROP COLLECTION
+---------------
+db.teacher.drop()
+show collections
+
+DROP DATABASE
+-------------
+use BDNS
+db.dropDatabase()
+show dbs
+
+EXIT
+----
+exit
+
+QUICK EXAM FLOW
+---------------
+show dbs
+use BDNS
+db
+db.createCollection("student")
+db.student.insert({name:"Aarush", rollno:269729, dept:"IT"})
+db.student.find()
+show collections
+db.student.remove({name:"Aarush"})
+db.student.drop()
+db.dropDatabase()
+exit
