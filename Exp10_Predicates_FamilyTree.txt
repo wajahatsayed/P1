@@ -1,0 +1,165 @@
+"""
+EXPERIMENT 10 : PREDICATE DERIVATION  and  FAMILY TREE (using predicates/rules)
+========================================================================
+Since the practicals allow Python (not necessarily Prolog), we simulate
+"facts" as Python data, and "rules" as Python FUNCTIONS that derive new
+facts from existing ones -- this mirrors Prolog's facts/rules logically,
+just in Python syntax.
+
+PREDICATE DERIVATION core idea: given facts like Batsman(Sachin) and a
+rule like Batsman(x) -> Cricketer(x), derive Cricketer(Sachin).
+
+FAMILY TREE core idea: define base facts (parent, male, female), then
+write RULES (functions) for father, mother, grandfather, brother, uncle,
+etc., each expressed in terms of the base facts + logical conditions
+(conjunction AND / disjunction OR).
+"""
+
+# ============================================================
+# PART A: ORIGINAL VERSION — Predicate Derivation (Sachin example)
+# ============================================================
+
+# Facts
+facts = {
+    'Batsman': ['Sachin'],
+}
+
+# Rule: Batsman(x) -> Cricketer(x)
+def derive_cricketer(facts):
+    derived = []
+    for person in facts.get('Batsman', []):
+        derived.append(person)
+    return derived
+
+print("===== PART A: ORIGINAL Predicate Derivation =====")
+cricketers = derive_cricketer(facts)
+for person in cricketers:
+    print(f"Batsman({person}) -> Cricketer({person})  [DERIVED: Cricketer({person}) is TRUE]")
+
+
+# ---- Family Tree using predicates (facts + rules) ----
+
+# Base FACTS
+parent = [('John', 'Mary'), ('John', 'Steve'),      # John is parent of Mary, Steve
+          ('Mary', 'Alice'), ('Mary', 'Bob'),        # Mary is parent of Alice, Bob
+          ('Linda', 'Mary'), ('Linda', 'Steve')]     # Linda is parent of Mary, Steve
+male = ['John', 'Steve', 'Bob']
+female = ['Linda', 'Mary', 'Alice']
+
+# RULES (conjunction AND = 'and' in Python, disjunction OR = 'or')
+def is_father(x, y):
+    return (x, y) in parent and x in male
+
+def is_mother(x, y):
+    return (x, y) in parent and x in female
+
+def is_grandfather(x, z):
+    return any(is_father(x, y) and (y, z) in parent for y in male + female)
+
+def is_sibling(x, y):
+    return x != y and any((p, x) in parent and (p, y) in parent for p, _ in parent)
+
+def is_brother(x, y):
+    return is_sibling(x, y) and x in male
+
+def is_uncle(x, y):
+    # x is uncle of y if x is brother of one of y's parents
+    parents_of_y = [p for (p, c) in parent if c == y]
+    return any(is_brother(x, p) for p in parents_of_y)
+
+print("\n===== Family Tree: ORIGINAL =====")
+print("Is John father of Mary?", is_father('John', 'Mary'))
+print("Is Linda mother of Steve?", is_mother('Linda', 'Steve'))
+print("Is John grandfather of Alice?", is_grandfather('John', 'Alice'))
+print("Is Steve brother of Mary?", is_brother('Steve', 'Mary'))
+print("Is Steve uncle of Alice?", is_uncle('Steve', 'Alice'))
+
+print("\n-- Family Tree structure --")
+for p, c in parent:
+    print(f"{p} -> {c}")
+
+
+# ============================================================
+# PART B: ALTERNATE VERSION
+#   - Different predicate chain (e.g. Student -> Graduate -> Employable)
+#   - Family Tree: DIFFERENT relation queried -- cousin, aunt, nephew
+# ============================================================
+
+facts2 = {'Student': ['Ravi'], 'Graduate': ['Ravi']}
+
+def derive_employable(facts):
+    # Rule: Student(x) AND Graduate(x) -> Employable(x)
+    derived = []
+    for person in facts.get('Student', []):
+        if person in facts.get('Graduate', []):
+            derived.append(person)
+    return derived
+
+print("\n===== PART B: ALTERNATE Predicate Derivation (two-condition rule) =====")
+employable = derive_employable(facts2)
+for person in employable:
+    print(f"Student({person}) AND Graduate({person}) -> Employable({person})  [DERIVED]")
+
+def is_aunt(x, y):
+    parents_of_y = [p for (p, c) in parent if c == y]
+    return any(is_sibling(x, p) and x in female for p in parents_of_y)
+
+def is_cousin(x, y):
+    parents_of_x = [p for (p, c) in parent if c == x]
+    parents_of_y = [p for (p, c) in parent if c == y]
+    return any(is_sibling(px, py) for px in parents_of_x for py in parents_of_y)
+
+def is_nephew(x, y):
+    # x is nephew of y if y is uncle/aunt of x, and x is male
+    return x in male and (is_uncle(y, x) or is_aunt(y, x))
+
+print("\n===== Family Tree: ALTERNATE (aunt, cousin, nephew queries) =====")
+print("Is Mary aunt of (hypothetical) Steve's child? (demo logic, depends on data)")
+print("Is Alice cousin of Steve's children? (needs Steve to have children in data)")
+print("Is Bob nephew of Steve?", is_nephew('Bob', 'Steve'))
+print("Is Bob nephew of Linda?", is_nephew('Bob', 'Linda'), "(Linda is grandparent, not aunt, so False)")
+
+
+# ============================================================
+# PART C: EASY / BEGINNER VERSION with explanation
+# ============================================================
+"""
+SIMPLE EXPLANATION:
+  - FACTS are just things you already know for certain, stored as data
+    (lists, tuples, dictionaries). E.g. parent = [('John','Mary')] means
+    "John is a parent of Mary" is a known fact.
+  - RULES are functions that COMBINE facts using logical conditions to
+    derive NEW information that wasn't explicitly stated.
+      - "AND" in a rule = Python's `and` (both conditions must be true)
+      - "OR"  in a rule = Python's `or`  (at least one must be true)
+  - Example rule in plain English: "x is a grandfather of z if x is the
+    father of some person y, AND y is a parent of z."
+    In Python: is_grandfather(x,z) = exists a y such that
+               is_father(x,y) AND (y,z) is a parent fact.
+
+CLAUSES / FACTS / PREDICATES / RULES -- definitions often asked alongside this:
+  - PREDICATE: a statement with a truth value once given specific objects,
+    e.g. Father(John, Mary) -- is TRUE or FALSE depending on who John/Mary are.
+  - FACT: a predicate asserted to be true with no conditions,
+    e.g. Parent(John, Mary).
+  - RULE: an IF-THEN statement combining predicates,
+    e.g. Parent(x,y) AND Male(x) -> Father(x,y).
+  - CLAUSE: the general logical form (fact OR rule) used in a knowledge base --
+    a fact is a clause with no conditions; a rule is a clause with
+    conditions (premises) and a conclusion.
+"""
+
+def simple_rule_demo():
+    # facts
+    is_parent = [('Tom', 'Jerry')]
+    is_male = ['Tom']
+
+    # rule: Parent(x,y) AND Male(x) -> Father(x,y)
+    for (x, y) in is_parent:
+        if x in is_male:
+            print(f"Rule fires: Parent({x},{y}) AND Male({x})  =>  Father({x},{y}) is TRUE")
+        else:
+            print(f"Rule does NOT fire for ({x},{y}) since {x} is not Male")
+
+print("\n===== PART C: EASY VERSION (single rule firing, explained) =====")
+simple_rule_demo()

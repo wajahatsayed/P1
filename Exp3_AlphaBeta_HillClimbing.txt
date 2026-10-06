@@ -1,0 +1,164 @@
+"""
+EXPERIMENT 3 : ALPHA-BETA PRUNING  and  HILL CLIMBING
+========================================================================
+ALPHA-BETA core idea: same answer as Minimax, but SKIPS branches that can't
+possibly change the result. Track alpha (best for MAX so far) and
+beta (best for MIN so far); if alpha >= beta at any point, STOP exploring
+that branch (prune it).
+
+HILL CLIMBING core idea: start somewhere, look at neighbours, move to the
+BEST neighbour. Stop when no neighbour is better (you're at a peak --
+which might only be a LOCAL peak, not the global best).
+"""
+
+# ============================================================
+# PART A: ORIGINAL VERSION
+# ============================================================
+
+import math
+
+def alpha_beta(depth, node_index, maximizing, values, alpha, beta, max_depth):
+    if depth == max_depth:
+        return values[node_index]
+
+    if maximizing:
+        best = -math.inf
+        for i in range(2):
+            val = alpha_beta(depth + 1, node_index * 2 + i, False, values, alpha, beta, max_depth)
+            best = max(best, val)
+            alpha = max(alpha, best)
+            if beta <= alpha:
+                break   # prune
+        return best
+    else:
+        best = math.inf
+        for i in range(2):
+            val = alpha_beta(depth + 1, node_index * 2 + i, True, values, alpha, beta, max_depth)
+            best = min(best, val)
+            beta = min(beta, best)
+            if beta <= alpha:
+                break   # prune
+        return best
+
+print("===== PART A: ORIGINAL Alpha-Beta =====")
+leaf_values = [3, 5, 6, 9, 1, 2, 0, -1]   # 8 leaves -> depth 3 tree
+max_depth = 3
+result = alpha_beta(0, 0, True, leaf_values, -math.inf, math.inf, max_depth)
+print("Optimal value at root:", result)
+
+
+def hill_climbing(start, objective_function, get_neighbors):
+    current = start
+    while True:
+        neighbors = get_neighbors(current)
+        next_state = max(neighbors, key=objective_function, default=None)
+        if next_state is None or objective_function(next_state) <= objective_function(current):
+            return current   # no better neighbour -> stop (peak reached)
+        current = next_state
+
+def objective(x):
+    return -(x - 5) ** 2 + 25     # peak at x = 5
+
+def neighbors_of(x):
+    return [x - 1, x + 1]
+
+print("\n===== Hill Climbing: ORIGINAL =====")
+start_point = 0
+peak = hill_climbing(start_point, objective, neighbors_of)
+print(f"Starting at {start_point}, climbed to peak at x = {peak}, value = {objective(peak)}")
+
+
+# ============================================================
+# PART B: ALTERNATE VERSION
+#   - Different leaf values for alpha-beta (+ shows pruned-node count)
+#   - Hill climbing on a DIFFERENT objective function + shows it can get
+#     stuck on a LOCAL maximum (important limitation to demonstrate!)
+# ============================================================
+
+prune_count = 0
+
+def alpha_beta_counted(depth, node_index, maximizing, values, alpha, beta, max_depth):
+    global prune_count
+    if depth == max_depth:
+        return values[node_index]
+    if maximizing:
+        best = -math.inf
+        for i in range(2):
+            val = alpha_beta_counted(depth + 1, node_index * 2 + i, False, values, alpha, beta, max_depth)
+            best = max(best, val)
+            alpha = max(alpha, best)
+            if beta <= alpha:
+                prune_count += 1
+                break
+        return best
+    else:
+        best = math.inf
+        for i in range(2):
+            val = alpha_beta_counted(depth + 1, node_index * 2 + i, True, values, alpha, beta, max_depth)
+            best = min(best, val)
+            beta = min(beta, best)
+            if beta <= alpha:
+                prune_count += 1
+                break
+        return best
+
+print("\n===== PART B: ALTERNATE Alpha-Beta (different values, counts prunes) =====")
+leaf_values2 = [2, 3, 5, 9, 0, 1, 7, 5]
+result2 = alpha_beta_counted(0, 0, True, leaf_values2, -math.inf, math.inf, 3)
+print("Optimal value at root:", result2)
+print("Number of branches pruned:", prune_count)
+
+def tricky_objective(x):
+    # has a small local bump at x=2 (value 10) and a taller peak at x=8 (value 20)
+    return -(x - 8) ** 2 + 20 if x > 4 else -(x - 2) ** 2 + 10
+
+def neighbors2(x):
+    return [x - 1, x + 1]
+
+print("\n===== Hill Climbing: ALTERNATE (demonstrates LOCAL MAXIMUM trap) =====")
+start2 = 2
+peak2 = hill_climbing(start2, tricky_objective, neighbors2)
+print(f"Starting at {start2}, climbed to peak at x = {peak2}, value = {tricky_objective(peak2)}")
+print("NOTE: True global peak is at x=8 (value 20), but starting at x=2 traps")
+print("      hill climbing at the LOCAL peak x=2 (value 10) since it never looks further.")
+
+
+# ============================================================
+# PART C: EASY / BEGINNER VERSION with explanation
+# ============================================================
+"""
+ALPHA-BETA SIMPLE EXPLANATION:
+  - alpha = the best (highest) value the MAXIMIZER can guarantee so far.
+  - beta  = the best (lowest) value the MINIMIZER can guarantee so far.
+  - While exploring, if we ever find that beta <= alpha, it means the
+    opponent would NEVER let us reach this branch anyway -- so we stop
+    exploring it (prune) and save computation. The FINAL ANSWER is
+    identical to plain Minimax; we just skip useless work.
+
+HILL CLIMBING SIMPLE EXPLANATION:
+  - Think of it like climbing a hill in thick fog: you can only feel the
+    ground right next to your feet (your neighbours).
+  - At each step, check all neighbouring positions; move to whichever one
+    is higher (better).
+  - Stop when every neighbour is lower than or equal to where you are --
+    you think you're at the top, but in fog you can't tell if a TALLER
+    hill exists somewhere else (this is the "local maximum" problem).
+"""
+
+def simple_hill_climb(start, score_fn):
+    current = start
+    print(f"Start at {current}, score = {score_fn(current)}")
+    while True:
+        left, right = current - 1, current + 1
+        best_neighbor = max([left, right], key=score_fn)
+        if score_fn(best_neighbor) <= score_fn(current):
+            print("No better neighbour found. Stopping at peak:", current)
+            return current
+        print(f"Moving from {current} to {best_neighbor} (better score)")
+        current = best_neighbor
+
+def simple_score(x):
+    return -(x - 5) ** 2     # peak at x = 5, score 0
+
+print("\n===== PART C: EASY VERSION (Hill Climbing with step-by-step prints) =====")
+simple_hill_climb(0, simple_score)

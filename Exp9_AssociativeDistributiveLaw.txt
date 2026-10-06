@@ -1,0 +1,114 @@
+"""
+EXPERIMENT 9 : ASSOCIATIVE LAW  and  DISTRIBUTIVE LAW (Boolean Logic)
+========================================================================
+ASSOCIATIVE LAW:  (A op B) op C  ==  A op (B op C)     for op = AND / OR
+DISTRIBUTIVE LAW: A AND (B OR C)  ==  (A AND B) OR (A AND C)
+                  A OR (B AND C)  ==  (A OR B) AND (A OR C)
+
+We PROVE these laws hold by building a TRUTH TABLE: try every combination
+of True/False for A, B, C and check both sides give the SAME result
+every single time.
+"""
+
+import itertools
+
+# ============================================================
+# PART A: ORIGINAL VERSION
+# ============================================================
+
+def associative_law_and():
+    print(f"{'A':<6}{'B':<6}{'C':<6}{'(A&B)&C':<10}{'A&(B&C)':<10}{'Match?'}")
+    all_match = True
+    for A, B, C in itertools.product([True, False], repeat=3):
+        left = (A and B) and C
+        right = A and (B and C)
+        match = left == right
+        all_match &= match
+        print(f"{A!s:<6}{B!s:<6}{C!s:<6}{left!s:<10}{right!s:<10}{match}")
+    print("Associative Law (AND) holds for all cases:", all_match)
+
+print("===== PART A: ORIGINAL — Associative Law (AND) =====")
+associative_law_and()
+
+
+def distributive_law_and_or():
+    print(f"\n{'A':<6}{'B':<6}{'C':<6}{'A&(B|C)':<10}{'(A&B)|(A&C)':<14}{'Match?'}")
+    all_match = True
+    for A, B, C in itertools.product([True, False], repeat=3):
+        left = A and (B or C)
+        right = (A and B) or (A and C)
+        match = left == right
+        all_match &= match
+        print(f"{A!s:<6}{B!s:<6}{C!s:<6}{left!s:<10}{right!s:<14}{match}")
+    print("Distributive Law (AND over OR) holds for all cases:", all_match)
+
+print("\n===== Distributive Law: ORIGINAL =====")
+distributive_law_and_or()
+
+
+# ============================================================
+# PART B: ALTERNATE VERSION
+#   - Associative Law for OR instead of AND
+#   - Distributive Law the OTHER way: OR over AND
+# ============================================================
+
+def associative_law_or():
+    print(f"{'A':<6}{'B':<6}{'C':<6}{'(A|B)|C':<10}{'A|(B|C)':<10}{'Match?'}")
+    all_match = True
+    for A, B, C in itertools.product([True, False], repeat=3):
+        left = (A or B) or C
+        right = A or (B or C)
+        match = left == right
+        all_match &= match
+        print(f"{A!s:<6}{B!s:<6}{C!s:<6}{left!s:<10}{right!s:<10}{match}")
+    print("Associative Law (OR) holds for all cases:", all_match)
+
+print("\n===== PART B: ALTERNATE — Associative Law (OR) =====")
+associative_law_or()
+
+
+def distributive_law_or_and():
+    print(f"\n{'A':<6}{'B':<6}{'C':<6}{'A|(B&C)':<10}{'(A|B)&(A|C)':<14}{'Match?'}")
+    all_match = True
+    for A, B, C in itertools.product([True, False], repeat=3):
+        left = A or (B and C)
+        right = (A or B) and (A or C)
+        match = left == right
+        all_match &= match
+        print(f"{A!s:<6}{B!s:<6}{C!s:<6}{left!s:<10}{right!s:<14}{match}")
+    print("Distributive Law (OR over AND) holds for all cases:", all_match)
+
+print("\n===== Distributive Law: ALTERNATE (OR over AND) =====")
+distributive_law_or_and()
+
+
+# ============================================================
+# PART C: EASY / BEGINNER VERSION with explanation
+# ============================================================
+"""
+SIMPLE EXPLANATION:
+  - "Proving" a logic law with code just means: try EVERY possible
+    True/False combination for the variables involved, compute BOTH
+    sides of the equation, and check they're always equal.
+  - itertools.product([True, False], repeat=3) generates all 8 possible
+    combinations of 3 boolean variables: TTT, TTF, TFT, TFF, FTT, FTF,
+    FFT, FFF.
+  - If both sides match in EVERY row of the truth table, the law is proven
+    (for boolean/propositional logic, checking all combinations IS a
+    complete proof, since there's nothing else to check).
+"""
+
+def simple_law_check(law_name, left_fn, right_fn):
+    print(f"Checking: {law_name}")
+    for A, B, C in itertools.product([True, False], repeat=3):
+        left = left_fn(A, B, C)
+        right = right_fn(A, B, C)
+        status = "MATCH" if left == right else "MISMATCH!"
+        print(f"  A={A}, B={B}, C={C}  ->  left={left}, right={right}  [{status}]")
+
+print("\n===== PART C: EASY VERSION (generic law-checking helper) =====")
+simple_law_check(
+    "Associative Law (AND): (A&B)&C == A&(B&C)",
+    lambda A, B, C: (A and B) and C,
+    lambda A, B, C: A and (B and C)
+)

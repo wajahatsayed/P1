@@ -1,0 +1,176 @@
+"""
+EXPERIMENT 5 : WATER JUG PROBLEM  and  TIC-TAC-TOE using MINIMAX
+========================================================================
+WATER JUG core idea: BFS over STATES (amount in jug1, amount in jug2).
+From any state, possible moves are: fill a jug, empty a jug, or pour one
+jug into the other (until either source is empty or destination is full).
+
+TIC-TAC-TOE MINIMAX core idea: simulate every possible future, assume
+opponent plays optimally against you, pick the move that MAXIMIZES your
+guaranteed outcome (win=+1, draw=0, loss=-1).
+"""
+
+# ============================================================
+# PART A: ORIGINAL VERSION — Water Jug (4L and 3L jugs, target 2L)
+# ============================================================
+
+from collections import deque
+
+def water_jug_bfs(cap1, cap2, target):
+    start = (0, 0)
+    visited = {start}
+    queue = deque([(start, [start])])
+
+    while queue:
+        (a, b), path = queue.popleft()
+        if a == target or b == target:
+            return path
+
+        next_states = [
+            (cap1, b), (a, cap2),            # fill jug1, fill jug2
+            (0, b), (a, 0),                  # empty jug1, empty jug2
+            (max(0, a - (cap2 - b)), min(cap2, a + b)),   # pour jug1 -> jug2
+            (min(cap1, a + b), max(0, b - (cap1 - a))),   # pour jug2 -> jug1
+        ]
+        for state in next_states:
+            if state not in visited:
+                visited.add(state)
+                queue.append((state, path + [state]))
+    return None
+
+print("===== PART A: ORIGINAL Water Jug (4L, 3L, target 2L) =====")
+solution = water_jug_bfs(4, 3, 2)
+print("Steps (jug1, jug2):", solution)
+
+
+# ---- Tic-Tac-Toe Minimax ----
+
+def check_winner(board):
+    lines = [board[0:3], board[3:6], board[6:9],
+             board[0::3], board[1::3], board[2::3],
+             board[0::4], board[2:7:2]]
+    for line in lines:
+        if line[0] != ' ' and line[0] == line[1] == line[2]:
+            return line[0]
+    return None
+
+def minimax(board, is_maximizing):
+    winner = check_winner(board)
+    if winner == 'X':
+        return 1
+    if winner == 'O':
+        return -1
+    if ' ' not in board:
+        return 0
+
+    if is_maximizing:
+        best = -float('inf')
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = 'X'
+                best = max(best, minimax(board, False))
+                board[i] = ' '
+        return best
+    else:
+        best = float('inf')
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = 'O'
+                best = min(best, minimax(board, True))
+                board[i] = ' '
+        return best
+
+def best_move(board):
+    best_val = -float('inf')
+    move = -1
+    for i in range(9):
+        if board[i] == ' ':
+            board[i] = 'X'
+            val = minimax(board, False)
+            board[i] = ' '
+            if val > best_val:
+                best_val = val
+                move = i
+    return move
+
+print("\n===== Tic-Tac-Toe: ORIGINAL (find best move for X) =====")
+board = ['X', 'O', 'X',
+         'O', 'X', ' ',
+         ' ', ' ', 'O']
+print("Current board:", board)
+move = best_move(board)
+print(f"Best move for X is position {move} (0-indexed, row-major)")
+
+
+# ============================================================
+# PART B: ALTERNATE VERSION
+#   - Different jug capacities + different target
+#   - Tic-Tac-Toe: evaluate a DIFFERENT board, and show the full score
+#     for EVERY possible move (not just the best one)
+# ============================================================
+
+print("\n===== PART B: ALTERNATE Water Jug (5L, 3L, target 4L) =====")
+solution2 = water_jug_bfs(5, 3, 4)
+print("Steps (jug1, jug2):", solution2)
+
+print("\n===== Tic-Tac-Toe: ALTERNATE (score every possible move) =====")
+board2 = ['X', ' ', ' ',
+          ' ', 'O', ' ',
+          ' ', ' ', ' ']
+print("Current board:", board2)
+for i in range(9):
+    if board2[i] == ' ':
+        board2[i] = 'X'
+        score = minimax(board2, False)
+        board2[i] = ' '
+        print(f"  Move at position {i}: score = {score}")
+
+
+# ============================================================
+# PART C: EASY / BEGINNER VERSION with explanation
+# ============================================================
+"""
+WATER JUG SIMPLE EXPLANATION:
+  - A "state" is just (amount in jug1, amount in jug2).
+  - From ANY state there are always up to 6 possible next moves:
+      1. Fill jug1 completely
+      2. Fill jug2 completely
+      3. Empty jug1
+      4. Empty jug2
+      5. Pour jug1 into jug2 (until jug1 empty OR jug2 full)
+      6. Pour jug2 into jug1 (until jug2 empty OR jug1 full)
+  - We explore these with BFS (level by level) so the FIRST time we reach
+    the target amount, it's guaranteed to be the SHORTEST sequence of steps.
+
+TIC-TAC-TOE MINIMAX SIMPLE EXPLANATION:
+  - X is MAX (wants score +1), O is MIN (wants score -1).
+  - minimax() tries EVERY possible move, then imagines the opponent
+    responding with THEIR best move, and so on until the game ends.
+  - It "unwinds" these imagined games: at X's turn pick the move with the
+    HIGHEST resulting score; at O's turn pick the LOWEST.
+  - The very first call picks whichever immediate move leads to the
+    best guaranteed final score for X.
+"""
+
+def simple_water_jug(cap1, cap2, target):
+    visited = {(0, 0)}
+    queue = [((0, 0), [(0, 0)])]
+    step_num = 0
+    while queue:
+        (a, b), path = queue.pop(0)
+        step_num += 1
+        print(f"Step {step_num}: checking state ({a}, {b})")
+        if a == target or b == target:
+            print("Target reached!")
+            return path
+        moves = [(cap1, b), (a, cap2), (0, b), (a, 0),
+                 (max(0, a-(cap2-b)), min(cap2, a+b)),
+                 (min(cap1, a+b), max(0, b-(cap1-a)))]
+        for m in moves:
+            if m not in visited:
+                visited.add(m)
+                queue.append((m, path + [m]))
+    return None
+
+print("\n===== PART C: EASY VERSION (Water Jug, with step prints) =====")
+simple_water_jug(4, 3, 2)

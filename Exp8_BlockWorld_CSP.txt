@@ -1,0 +1,148 @@
+"""
+EXPERIMENT 8 : BLOCK WORLD PROBLEM  and  CONSTRAINT SATISFACTION PROBLEM (CSP)
+========================================================================
+BLOCK WORLD core idea: blocks sit either ON another block or ON the table.
+Goal is some target arrangement. We apply simple rules: you can only move
+a block that has nothing on top of it (it's "clear"), and move it either
+onto another clear block or onto the table.
+
+CSP core idea: variables (e.g. regions) must each be assigned a value
+(e.g. a colour) such that no constraint (e.g. "neighbours must differ")
+is violated. Use backtracking: assign a variable, check constraints,
+backtrack if stuck.
+"""
+
+# ============================================================
+# PART A: ORIGINAL VERSION — Block World
+# ============================================================
+
+def is_clear(block, state):
+    return not any(state[b] == block for b in state)
+
+def move_block(block, destination, state):
+    if is_clear(block, state) and (destination == 'Table' or is_clear(destination, state)):
+        state[block] = destination
+        return True
+    return False
+
+print("===== PART A: ORIGINAL Block World =====")
+# initial: C on B, B on A, A on table   -> goal: A on B, B on C, C on table
+state = {'A': 'Table', 'B': 'A', 'C': 'B'}
+print("Initial state:", state)
+
+# Simple plan to reach goal A-on-B, B-on-C, C-on-table:
+move_block('C', 'Table', state)
+print("After moving C to Table:", state)
+move_block('B', 'Table', state)
+print("After moving B to Table:", state)
+move_block('C', 'Table', state)  # already there; demonstrating a move attempt
+move_block('A', 'B', state)
+print("After moving A onto B:", state)
+
+
+# ---- CSP: Map colouring (classic CSP example) ----
+
+def is_consistent(assignment, var, value, constraints):
+    for neighbor in constraints.get(var, []):
+        if neighbor in assignment and assignment[neighbor] == value:
+            return False
+    return True
+
+def backtrack_csp(variables, domains, constraints, assignment={}):
+    if len(assignment) == len(variables):
+        return assignment
+    unassigned = [v for v in variables if v not in assignment]
+    var = unassigned[0]
+    for value in domains[var]:
+        if is_consistent(assignment, var, value, constraints):
+            assignment[var] = value
+            result = backtrack_csp(variables, domains, constraints, assignment)
+            if result:
+                return result
+            del assignment[var]
+    return None
+
+print("\n===== CSP: ORIGINAL (map colouring, 4 regions) =====")
+variables = ['WA', 'NT', 'SA', 'Q']
+domains = {v: ['Red', 'Green', 'Blue'] for v in variables}
+constraints = {
+    'WA': ['NT', 'SA'],
+    'NT': ['WA', 'SA', 'Q'],
+    'SA': ['WA', 'NT', 'Q'],
+    'Q':  ['NT', 'SA'],
+}
+solution = backtrack_csp(variables, domains, constraints)
+print("Colour assignment:", solution)
+
+
+# ============================================================
+# PART B: ALTERNATE VERSION
+#   - Different block arrangement / goal
+#   - CSP with MORE regions (adds 'NSW', 'V') -- shows the code scales
+#     to any variable/constraint set without changing backtrack_csp()
+# ============================================================
+
+print("\n===== PART B: ALTERNATE Block World (different starting arrangement) =====")
+state2 = {'A': 'Table', 'B': 'Table', 'C': 'A'}  # C on A, B on table, A on table
+print("Initial state:", state2)
+move_block('C', 'Table', state2)
+print("After moving C to Table:", state2)
+move_block('B', 'C', state2)
+print("After moving B onto C:", state2)
+
+print("\n===== CSP: ALTERNATE (6 regions, full Australia map colouring) =====")
+variables2 = ['WA', 'NT', 'SA', 'Q', 'NSW', 'V']
+domains2 = {v: ['Red', 'Green', 'Blue'] for v in variables2}
+constraints2 = {
+    'WA': ['NT', 'SA'],
+    'NT': ['WA', 'SA', 'Q'],
+    'SA': ['WA', 'NT', 'Q', 'NSW', 'V'],
+    'Q':  ['NT', 'SA', 'NSW'],
+    'NSW': ['SA', 'Q', 'V'],
+    'V': ['SA', 'NSW'],
+}
+solution2 = backtrack_csp(variables2, domains2, constraints2)
+print("Colour assignment:", solution2)
+
+
+# ============================================================
+# PART C: EASY / BEGINNER VERSION with explanation
+# ============================================================
+"""
+BLOCK WORLD SIMPLE EXPLANATION:
+  - A block is "clear" if no other block currently sits on top of it.
+  - You can only pick up / move a CLEAR block.
+  - You can place it either on the Table, or on top of another CLEAR block.
+  - The whole "plan" is just a sequence of these single moves that takes
+    you from the initial arrangement to the goal arrangement.
+
+CSP SIMPLE EXPLANATION:
+  - You have some VARIABLES (e.g. regions on a map) that each need a
+    VALUE (e.g. a colour) from their DOMAIN (list of allowed colours).
+  - CONSTRAINTS say which combinations are NOT allowed (e.g. neighbouring
+    regions can't share a colour).
+  - Backtracking: assign the next variable a value; check if it conflicts
+    with anything already assigned. If no conflict, move to the next
+    variable. If you get stuck (every value conflicts), go BACK and try
+    a different value for the previous variable.
+"""
+
+def simple_csp_demo():
+    variables = ['A', 'B', 'C']
+    domains = {'A': ['Red', 'Blue'], 'B': ['Red', 'Blue'], 'C': ['Red', 'Blue']}
+    constraints = {'A': ['B'], 'B': ['A', 'C'], 'C': ['B']}   # A-B and B-C must differ
+
+    assignment = {}
+    for var in variables:
+        for value in domains[var]:
+            print(f"Trying {var} = {value}...")
+            if is_consistent(assignment, var, value, constraints):
+                assignment[var] = value
+                print(f"  OK, assigned {var} = {value}")
+                break
+            else:
+                print(f"  Conflict, trying next value")
+    print("Final assignment:", assignment)
+
+print("\n===== PART C: EASY VERSION (CSP with step-by-step prints) =====")
+simple_csp_demo()

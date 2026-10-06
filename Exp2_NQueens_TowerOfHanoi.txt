@@ -1,0 +1,132 @@
+"""
+EXPERIMENT 2 : N-QUEENS PROBLEM  and  TOWER OF HANOI
+========================================================================
+N-QUEENS core idea: place queens row by row; before placing in a column,
+CHECK if it's safe (no other queen shares column or diagonal). If stuck,
+BACKTRACK (remove last queen, try next column).
+
+TOWER OF HANOI core idea: to move N disks from source to destination:
+  1. Move top (N-1) disks from source to helper (using destination as spare)
+  2. Move the Nth (biggest) disk from source to destination
+  3. Move the (N-1) disks from helper to destination (using source as spare)
+  This is a classic RECURSIVE problem.
+"""
+
+# ============================================================
+# PART A: ORIGINAL VERSION (N = 8, classic 8-Queens)
+# ============================================================
+
+def is_safe(board, row, col, n):
+    for i in range(row):
+        if board[i] == col or \
+           board[i] - i == col - row or \
+           board[i] + i == col + row:
+            return False
+    return True
+
+def solve_n_queens(board, row, n, solutions):
+    if row == n:
+        solutions.append(board[:])
+        return
+    for col in range(n):
+        if is_safe(board, row, col, n):
+            board[row] = col
+            solve_n_queens(board, row + 1, n, solutions)
+            board[row] = -1   # backtrack
+
+def print_solution(board, n):
+    for row in range(n):
+        line = ""
+        for col in range(n):
+            line += "Q " if board[row] == col else ". "
+        print(line)
+    print()
+
+print("===== PART A: ORIGINAL (8-Queens, first solution only) =====")
+n = 8
+board = [-1] * n
+solutions = []
+solve_n_queens(board, 0, n, solutions)
+print(f"Total solutions found: {len(solutions)}")
+print("First solution:")
+print_solution(solutions[0], n)
+
+
+def tower_of_hanoi(n, source, helper, destination):
+    if n == 1:
+        print(f"Move disk 1 from {source} to {destination}")
+        return
+    tower_of_hanoi(n - 1, source, destination, helper)
+    print(f"Move disk {n} from {source} to {destination}")
+    tower_of_hanoi(n - 1, helper, source, destination)
+
+print("===== Tower of Hanoi: ORIGINAL (3 disks) =====")
+tower_of_hanoi(3, 'A', 'B', 'C')
+
+
+# ============================================================
+# PART B: ALTERNATE VERSION
+#   - N-Queens for N = 4 (smaller, likely alternate exam size)
+#   - Print ALL solutions instead of just the first
+#   - Tower of Hanoi with 4 disks + a move counter
+# ============================================================
+
+print("\n===== PART B: ALTERNATE (4-Queens, ALL solutions) =====")
+n2 = 4
+board2 = [-1] * n2
+solutions2 = []
+solve_n_queens(board2, 0, n2, solutions2)
+print(f"Total solutions for 4-Queens: {len(solutions2)}")
+for idx, sol in enumerate(solutions2):
+    print(f"Solution {idx + 1}:")
+    print_solution(sol, n2)
+
+move_count = 0
+def tower_of_hanoi_counted(n, source, helper, destination):
+    global move_count
+    if n == 1:
+        move_count += 1
+        print(f"Move {move_count}: disk 1 from {source} to {destination}")
+        return
+    tower_of_hanoi_counted(n - 1, source, destination, helper)
+    move_count += 1
+    print(f"Move {move_count}: disk {n} from {source} to {destination}")
+    tower_of_hanoi_counted(n - 1, helper, source, destination)
+
+print("\n===== Tower of Hanoi: ALTERNATE (4 disks, with move counter) =====")
+tower_of_hanoi_counted(4, 'A', 'B', 'C')
+print(f"Total moves used: {move_count}  (formula check: 2^n - 1 = {2**4 - 1})")
+
+
+# ============================================================
+# PART C: EASY / BEGINNER VERSION with explanation
+# ============================================================
+"""
+N-QUEENS SIMPLE EXPLANATION:
+  - board[row] = col  means "the queen in this row is placed in this column"
+  - is_safe checks THREE things for a new queen at (row, col) against every
+    queen already placed in an earlier row `i`:
+      a) same column?          board[i] == col
+      b) same "/" diagonal?    board[i] - i == col - row
+      c) same "\" diagonal?    board[i] + i == col + row
+  - If none of these clash, it's safe to place the queen there.
+  - We try column 0,1,2... for each row; if a column fails, backtrack by
+    undoing the last placement (board[row] = -1) and trying the next option.
+
+TOWER OF HANOI SIMPLE EXPLANATION:
+  - You can only move ONE disk at a time, and never place a bigger disk on a smaller one.
+  - To move n disks, pretend the top (n-1) disks are "temporarily glued together".
+    Move that glued stack out of the way (to helper), move the one big disk directly
+    to destination, then move the glued stack on top of it.
+  - This "pretend" step is exactly the recursive call.
+"""
+
+def simple_hanoi(n, src, aux, dst):
+    if n == 0:
+        return                              # base case: nothing to move
+    simple_hanoi(n - 1, src, dst, aux)      # step 1: move (n-1) out of the way
+    print(f"Move disk {n} from {src} to {dst}")  # step 2: move the big one
+    simple_hanoi(n - 1, aux, src, dst)      # step 3: move (n-1) onto destination
+
+print("\n===== PART C: EASY VERSION (Hanoi, 2 disks, simplest trace) =====")
+simple_hanoi(2, 'A', 'B', 'C')

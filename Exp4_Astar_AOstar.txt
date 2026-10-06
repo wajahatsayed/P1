@@ -1,0 +1,177 @@
+"""
+EXPERIMENT 4 : A* ALGORITHM  and  AO* ALGORITHM
+========================================================================
+A* core idea: like Dijkstra, but smarter -- always expand the node with
+lowest f(n) = g(n) + h(n)
+   g(n) = actual cost from start to n
+   h(n) = heuristic ESTIMATE of cost from n to goal
+This finds the shortest path efficiently if h(n) never overestimates.
+
+AO* core idea: used for AND-OR graphs (where solving a problem may need
+ALL of several sub-problems solved, not just ONE). It picks the cheapest
+path considering AND-costs (sum of children) vs OR-costs (best single child).
+"""
+
+# ============================================================
+# PART A: ORIGINAL VERSION — A* on a simple weighted graph
+# ============================================================
+
+import heapq
+
+graph = {
+    'A': [('B', 1), ('C', 4)],
+    'B': [('D', 2), ('E', 5)],
+    'C': [('F', 3)],
+    'D': [('G', 6)],
+    'E': [('G', 1)],
+    'F': [('G', 2)],
+    'G': []
+}
+
+heuristic = {'A': 7, 'B': 6, 'C': 4, 'D': 3, 'E': 1, 'F': 2, 'G': 0}
+
+def a_star(graph, start, goal, h):
+    open_list = [(h[start], start, 0, [start])]   # (f, node, g, path)
+    visited = set()
+    while open_list:
+        f, node, g, path = heapq.heappop(open_list)
+        if node == goal:
+            return path, g
+        if node in visited:
+            continue
+        visited.add(node)
+        for neighbor, cost in graph[node]:
+            if neighbor not in visited:
+                new_g = g + cost
+                new_f = new_g + h[neighbor]
+                heapq.heappush(open_list, (new_f, neighbor, new_g, path + [neighbor]))
+    return None, float('inf')
+
+print("===== PART A: ORIGINAL A* =====")
+path, cost = a_star(graph, 'A', 'G', heuristic)
+print("Path found:", path)
+print("Total cost:", cost)
+
+
+# ---- AO* : simplified implementation for a small AND-OR graph ----
+# Structure: each node maps to a list of options; each option is either
+#   ('OR', [(child, cost)])         -- pick the cheapest ONE child
+#   ('AND', [(child1, cost1), (child2, cost2)])  -- must solve BOTH, costs ADD
+
+ao_graph = {
+    'Start': [('OR', [('A', 1), ('B', 2)])],
+    'A':     [('AND', [('C', 2), ('D', 3)])],
+    'B':     [('OR', [('E', 1)])],
+    'C':     [],   # leaf, cost 0 (solved)
+    'D':     [],
+    'E':     [],
+}
+
+def ao_star_cost(node, graph):
+    if node not in graph or not graph[node]:
+        return 0, node   # leaf node, solved, cost 0
+    best_cost = float('inf')
+    best_desc = ""
+    for kind, children in graph[node]:
+        if kind == 'OR':
+            for child, cost in children:
+                sub_cost, sub_desc = ao_star_cost(child, graph)
+                total = cost + sub_cost
+                if total < best_cost:
+                    best_cost = total
+                    best_desc = f"{child}({sub_desc})" if sub_desc else child
+        elif kind == 'AND':
+            total = 0
+            parts = []
+            for child, cost in children:
+                sub_cost, sub_desc = ao_star_cost(child, graph)
+                total += cost + sub_cost
+                parts.append(f"{child}({sub_desc})" if sub_desc else child)
+            if total < best_cost:
+                best_cost = total
+                best_desc = " + ".join(parts)
+    return best_cost, best_desc
+
+print("\n===== AO*: ORIGINAL (small AND-OR graph) =====")
+cost, path_desc = ao_star_cost('Start', ao_graph)
+print("Best plan:", path_desc)
+print("Total cost:", cost)
+
+
+# ============================================================
+# PART B: ALTERNATE VERSION
+#   - Different graph + different heuristic for A*
+#   - Different AND-OR structure for AO*
+# ============================================================
+
+graph2 = {
+    'S': [('A', 2), ('B', 5)],
+    'A': [('C', 4), ('D', 1)],
+    'B': [('D', 2)],
+    'C': [('G', 5)],
+    'D': [('G', 3)],
+    'G': []
+}
+heuristic2 = {'S': 6, 'A': 5, 'B': 3, 'C': 4, 'D': 2, 'G': 0}
+
+print("\n===== PART B: ALTERNATE A* (different graph) =====")
+path2, cost2 = a_star(graph2, 'S', 'G', heuristic2)
+print("Path found:", path2)
+print("Total cost:", cost2)
+
+ao_graph2 = {
+    'Root': [('AND', [('X', 2), ('Y', 3)])],
+    'X':    [('OR', [('P', 1), ('Q', 4)])],
+    'Y':    [],
+    'P':    [],
+    'Q':    [],
+}
+
+print("\n===== AO*: ALTERNATE (Root requires BOTH X and Y) =====")
+cost3, path_desc3 = ao_star_cost('Root', ao_graph2)
+print("Best plan:", path_desc3)
+print("Total cost:", cost3)
+
+
+# ============================================================
+# PART C: EASY / BEGINNER VERSION with explanation
+# ============================================================
+"""
+A* SIMPLE EXPLANATION:
+  - For every node we track f = g + h
+      g = how far we've ALREADY travelled to reach this node
+      h = our GUESS of how much further to the goal
+  - We always expand the node with the SMALLEST f next (that's why we
+    use a priority queue / heapq -- it always gives us the smallest item).
+  - This balances "shortest so far" (g) with "looks promising" (h).
+
+AO* SIMPLE EXPLANATION:
+  - Normal graphs: to reach the goal, you pick ONE path (OR).
+  - AND-OR graphs: sometimes solving a problem means solving SEVERAL
+    sub-problems TOGETHER (AND) -- e.g. "build a house" needs BOTH
+    "lay foundation" AND "build walls", not just one or the other.
+  - AO* finds the cheapest overall plan, correctly adding up costs for
+    AND-branches and picking the minimum for OR-branches.
+"""
+
+def simple_a_star(graph, start, goal, h):
+    import heapq
+    pq = [(h[start], start, 0)]
+    visited = set()
+    print(f"Starting A* from {start} to {goal}")
+    while pq:
+        f, node, g = heapq.heappop(pq)
+        print(f"  Expanding {node}: g={g}, h={h[node]}, f={f}")
+        if node == goal:
+            print("  Goal reached!")
+            return g
+        if node in visited:
+            continue
+        visited.add(node)
+        for neighbor, cost in graph[node]:
+            new_g = g + cost
+            heapq.heappush(pq, (new_g + h[neighbor], neighbor, new_g))
+    return None
+
+print("\n===== PART C: EASY VERSION (A* with step-by-step prints) =====")
+simple_a_star(graph, 'A', 'G', heuristic)

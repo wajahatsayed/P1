@@ -1,0 +1,162 @@
+"""
+EXPERIMENT 6 : MISSIONARIES AND CANNIBALS  and  NUMBER PUZZLE (8-Puzzle)
+========================================================================
+MISSIONARIES & CANNIBALS core idea: state = (missionaries_left, cannibals_left,
+boat_position). Try every possible boat load (1 or 2 people); a state is
+INVALID if cannibals outnumber missionaries on either bank (unless 0 missionaries
+there). Use BFS to find the shortest safe sequence of crossings.
+
+NUMBER PUZZLE (8-Puzzle) core idea: state = tuple of 9 tiles (0 = blank).
+From any state, the blank can move Up/Down/Left/Right (swap places with
+that neighbour). Use BFS (guarantees shortest solution) to reach the goal.
+"""
+
+# ============================================================
+# PART A: ORIGINAL VERSION — Missionaries & Cannibals (3 M, 3 C)
+# ============================================================
+
+from collections import deque
+
+def is_valid_state(m_left, c_left, total=3):
+    m_right, c_right = total - m_left, total - c_left
+    if m_left < 0 or c_left < 0 or m_right < 0 or c_right < 0:
+        return False
+    if m_left > 0 and c_left > m_left:
+        return False
+    if m_right > 0 and c_right > m_right:
+        return False
+    return True
+
+def missionaries_cannibals_bfs(total=3):
+    start = (total, total, 1)   # (missionaries_left, cannibals_left, boat_side: 1=left,0=right)
+    goal = (0, 0, 0)
+    visited = {start}
+    queue = deque([(start, [start])])
+
+    moves = [(1, 0), (2, 0), (0, 1), (0, 2), (1, 1)]  # (missionaries, cannibals) to move
+
+    while queue:
+        (m, c, boat), path = queue.popleft()
+        if (m, c, boat) == goal:
+            return path
+
+        for dm, dc in moves:
+            if boat == 1:   # boat on left, moving to right
+                new_m, new_c, new_boat = m - dm, c - dc, 0
+            else:           # boat on right, moving to left
+                new_m, new_c, new_boat = m + dm, c + dc, 1
+
+            if 0 <= new_m <= total and 0 <= new_c <= total:
+                if is_valid_state(new_m, c_left=new_c, total=total) and \
+                   is_valid_state(total - new_m, total - new_c, total=total):
+                    new_state = (new_m, new_c, new_boat)
+                    if new_state not in visited:
+                        visited.add(new_state)
+                        queue.append((new_state, path + [new_state]))
+    return None
+
+print("===== PART A: ORIGINAL Missionaries & Cannibals (3M, 3C) =====")
+solution = missionaries_cannibals_bfs(3)
+print("Sequence of states (missionaries_left, cannibals_left, boat_side):")
+for state in solution:
+    print(" ", state)
+
+
+# ---- 8-Puzzle (Number Puzzle) using BFS ----
+
+def get_neighbors_puzzle(state):
+    state = list(state)
+    idx = state.index(0)
+    row, col = idx // 3, idx % 3
+    moves = []
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    for dr, dc in directions:
+        nr, nc = row + dr, col + dc
+        if 0 <= nr < 3 and 0 <= nc < 3:
+            n_idx = nr * 3 + nc
+            new_state = state[:]
+            new_state[idx], new_state[n_idx] = new_state[n_idx], new_state[idx]
+            moves.append(tuple(new_state))
+    return moves
+
+def puzzle_bfs(start, goal):
+    visited = {start}
+    queue = deque([(start, [start])])
+    while queue:
+        state, path = queue.popleft()
+        if state == goal:
+            return path
+        for neighbor in get_neighbors_puzzle(state):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, path + [neighbor]))
+    return None
+
+print("\n===== Number Puzzle (8-Puzzle): ORIGINAL =====")
+initial = (1, 2, 3, 4, 8, 0, 7, 6, 5)
+goal = (1, 2, 3, 4, 5, 6, 7, 8, 0)
+sol = puzzle_bfs(initial, goal)
+print(f"Solved in {len(sol) - 1} moves")
+for step in sol:
+    print(step[0:3], step[3:6], step[6:9], "\n")
+
+
+# ============================================================
+# PART B: ALTERNATE VERSION
+#   - Missionaries & Cannibals with 2 M, 2 C (smaller, likely exam size)
+#   - 8-Puzzle with a DIFFERENT initial state
+# ============================================================
+
+print("\n===== PART B: ALTERNATE Missionaries & Cannibals (2M, 2C) =====")
+solution2 = missionaries_cannibals_bfs(2)
+if solution2:
+    for state in solution2:
+        print(" ", state)
+else:
+    print("  (No solution structure changes needed, logic is identical for any M=C count)")
+
+print("\n===== Number Puzzle: ALTERNATE (different initial state) =====")
+initial2 = (4, 1, 3, 7, 2, 5, 0, 8, 6)   # verified solvable relative to goal below
+sol2 = puzzle_bfs(initial2, goal)
+print(f"Solved in {len(sol2) - 1} moves")
+print("NOTE: not every random 3x3 arrangement is solvable (depends on permutation")
+print("      parity) -- if the exam gives you a state with no solution, BFS will")
+print("      simply run until the queue empties and return None. Always sanity-check")
+print("      by counting 'inversions' if you suspect this, or just trust BFS's result.")
+
+
+# ============================================================
+# PART C: EASY / BEGINNER VERSION with explanation
+# ============================================================
+"""
+MISSIONARIES & CANNIBALS SIMPLE EXPLANATION:
+  - Think of the state as "how many missionaries and cannibals are
+    currently on the STARTING bank, and which side the boat is on".
+  - The boat can carry 1 or 2 people per trip.
+  - A state is ILLEGAL if, on either bank, cannibals outnumber
+    missionaries (and there's at least 1 missionary there) --
+    because then the missionaries would be "eaten".
+  - We try all legal boat-loads from the current state and use BFS to
+    guarantee we find the solution with the FEWEST river crossings.
+
+8-PUZZLE SIMPLE EXPLANATION:
+  - The blank tile (0) can swap with whichever tile is directly above,
+    below, left, or right of it -- that's a "move".
+  - From the initial arrangement, we generate every possible move,
+    then every possible move from THOSE states, and so on (BFS),
+    stopping the moment we reach the goal arrangement.
+  - BFS guarantees this is the SHORTEST possible solution.
+"""
+
+def simple_puzzle_move_demo(state):
+    print("Current state:")
+    print(state[0:3])
+    print(state[3:6])
+    print(state[6:9])
+    neighbors = get_neighbors_puzzle(state)
+    print(f"\nFrom here, the blank can move to create {len(neighbors)} new states:")
+    for n in neighbors:
+        print(" ", n[0:3], n[3:6], n[6:9])
+
+print("\n===== PART C: EASY VERSION (showing one puzzle move step) =====")
+simple_puzzle_move_demo((1, 2, 3, 4, 8, 0, 7, 6, 5))
