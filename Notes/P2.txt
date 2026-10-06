@@ -1,0 +1,110 @@
+PRACTICAL 2 - SIMPLE QUERIES WITH MONGODB
+=========================================
+
+NOTE
+----
+The syllabus lists "Simple Queries with MongoDB", but the retrieved practical
+file set did not provide a complete dedicated Practical 2 command sheet.
+The commands below are the necessary exam-oriented MongoDB query patterns.
+
+SETUP
+-----
+use BDNS
+db.student.insertMany([
+  {name:"Aarush", age:20, dept:"IT", marks:85, city:"Mumbai"},
+  {name:"Rahul", age:21, dept:"CS", marks:72, city:"Pune"},
+  {name:"Neha", age:20, dept:"IT", marks:91, city:"Mumbai"}
+])
+
+DISPLAY ALL
+-----------
+db.student.find()
+
+PRETTY DISPLAY
+--------------
+db.student.find().pretty()
+
+FIND ONE
+--------
+db.student.findOne()
+
+EQUALITY
+--------
+db.student.find({dept:"IT"})
+
+COMPARISON OPERATORS
+--------------------
+db.student.find({marks:{$gt:80}})
+db.student.find({marks:{$gte:80}})
+db.student.find({marks:{$lt:80}})
+db.student.find({marks:{$lte:80}})
+db.student.find({marks:{$ne:80}})
+
+IN / NOT IN
+-----------
+db.student.find({city:{$in:["Mumbai","Pune"]}})
+db.student.find({city:{$nin:["Mumbai","Pune"]}})
+
+LOGICAL OPERATORS
+-----------------
+db.student.find({$and:[{dept:"IT"},{marks:{$gt:80}}]})
+db.student.find({$or:[{city:"Mumbai"},{marks:{$gt:90}}]})
+db.student.find({marks:{$not:{$gt:80}}})
+
+FIELD EXISTENCE
+---------------
+db.student.find({city:{$exists:true}})
+
+PROJECTION
+----------
+db.student.find({dept:"IT"},{name:1,marks:1,_id:0})
+
+SORT
+----
+db.student.find().sort({marks:1})
+db.student.find().sort({marks:-1})
+
+LIMIT / SKIP
+------------
+db.student.find().limit(2)
+db.student.find().skip(1)
+
+COUNT
+-----
+db.student.count()
+
+DISTINCT
+--------
+db.student.distinct("city")
+
+UPDATE
+------
+db.student.update(
+  {name:"Aarush"},
+  {$set:{marks:90}}
+)
+
+MODERN EQUIVALENT
+-----------------
+db.student.updateOne(
+  {name:"Aarush"},
+  {$set:{marks:90}}
+)
+
+DELETE
+------
+db.student.remove({name:"Rahul"})
+
+MODERN EQUIVALENT
+-----------------
+db.student.deleteOne({name:"Rahul"})
+
+EXAM PATTERN
+------------
+1. Insert a few records.
+2. Use find() with a condition.
+3. Use comparison/logical operators.
+4. Use projection.
+5. Sort/limit if asked.
+6. Update a record.
+7. Delete a record.

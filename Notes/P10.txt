@@ -1,0 +1,88 @@
+PRACTICAL 10 - JSON AND MONGODB
+===============================
+
+SOURCE TOPICS
+-------------
+1. Creating JSON
+2. Parsing JSON
+3. Persisting/using JSON
+4. Export MongoDB to JSON
+5. Delete JSON object from MongoDB
+
+1. CREATING JSON
+----------------
+<html>
+<head>
+<title>Creating JSON</title>
+</head>
+<body>
+<script type="text/javascript">
+var data = {
+    "name": "Aarush",
+    "age": 20,
+    "dept": "IT"
+};
+
+document.writeln(JSON.stringify(data) + "<br/>");
+document.writeln(JSON.stringify(data, ["name","age","dept"]) + "<br/>");
+document.writeln(JSON.stringify(data, ["name","age","dept"], 5));
+</script>
+</body>
+</html>
+
+2. PARSING JSON
+---------------
+<script>
+var data = '{"name":"Aarush","age":20,"dept":"IT"}';
+
+var jsonObj = JSON.parse(data);
+
+document.writeln(jsonObj.name);
+
+for (var key in jsonObj) {
+    document.writeln("<br/>" + key + " : " + jsonObj[key]);
+}
+</script>
+
+PRACTICAL CALLBACK-STYLE PARSE
+------------------------------
+var jsonObj = JSON.parse(data, function(name, value) {
+    return value;
+});
+
+3. EXPORT MONGODB TO JSON
+-------------------------
+The syllabus explicitly asks to export MongoDB to JSON.
+
+Standard command-line pattern:
+
+mongoexport --db=BDNS --collection=student --out=student.json
+
+Export selected fields:
+mongoexport --db=BDNS --collection=student --fields=name,age,dept --out=student.json
+
+Import back:
+mongoimport --db=BDNS --collection=student --file=student.json
+
+IMPORTANT:
+Exact mongoexport/mongoimport options can vary by MongoDB tools version. Use the
+version installed in the college VMware.
+
+4. DELETE JSON-LIKE DOCUMENT FROM MONGODB
+------------------------------------------
+use BDNS
+db.student.remove({name:"Aarush"})
+
+Modern equivalent:
+db.student.deleteOne({name:"Aarush"})
+
+5. VERIFY
+---------
+db.student.find()
+
+QUICK MEMORY
+------------
+JSON.stringify(object) -> converts object to JSON string
+JSON.parse(string)     -> converts JSON string to JavaScript object
+mongoexport             -> MongoDB to JSON
+mongoimport             -> JSON to MongoDB

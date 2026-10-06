@@ -1,0 +1,112 @@
+PRACTICAL 6/7 - PHP WITH MONGODB
+================================
+
+NUMBERING NOTE
+--------------
+The syllabus lists PHP as Practical 6, while the retrieved practical PDF is
+labelled Practical 7. Follow your teacher's numbering.
+
+SOURCE REQUIREMENTS
+-------------------
+The practical PDF specifies XAMPP and a PHP MongoDB extension.
+
+SOURCE WORKFLOW
+---------------
+1. Put php_mongo.dll in C:\xampp\php\ext
+2. Add the extension entry in php.ini.
+3. Start mongod in one CMD.
+4. Start mongo in another CMD.
+5. Start XAMPP and Apache.
+6. Save PHP file under the XAMPP web directory.
+7. Open localhost/<filename>.
+8. Verify in MongoDB.
+
+NOTE ON LEGACY CODE
+-------------------
+The supplied practical uses the old MongoClient API. Modern PHP MongoDB uses
+the MongoDB PHP extension + Composer library. For an exam using the college VM,
+follow the exact legacy environment supplied by the college.
+
+INSERT - SOURCE STYLE
+---------------------
+<?php
+$m = new MongoClient();
+echo "Connected to database successfully";
+$db = $m->MYDB;
+echo "\nDatabase selected successfully";
+$col = $db->MyCol;
+echo "\nCollection selected successfully";
+
+$doc = array(
+    "name" => "Aarush",
+    "age" => 20,
+    "dept" => "TYIT",
+    "rollno" => 269729
+);
+
+$col->insert($doc);
+echo "\nDocument inserted successfully";
+?>
+
+UPDATE - SOURCE STYLE
+---------------------
+<?php
+$m = new MongoClient();
+echo "Connected to database successfully.";
+$db = $m->MYDB;
+echo "\nDatabase selected successfully.";
+$col = $db->MyCol;
+echo "\nCollection selected successfully.";
+
+$col->update(
+    array("name" => "Aarush"),
+    array('$set' => array("age" => 21))
+);
+
+echo "\nDocument updated successfully.";
+?>
+
+RETRIEVE - SOURCE STYLE
+-----------------------
+<?php
+$m = new MongoClient();
+echo "Connected to database successfully.";
+$db = $m->MYDB;
+echo "\nDatabase selected successfully.";
+$col = $db->MyCol;
+echo "\nCollection selected successfully.";
+
+$cursor = $col->find();
+
+foreach($cursor as $doc) {
+    echo "<br/>";
+    echo $doc["name"]."<br/>";
+    echo $doc["age"]."<br/>";
+    echo $doc["dept"]."<br/>";
+    echo $doc["rollno"]."<br/>";
+}
+?>
+
+DELETE - SOURCE STYLE
+---------------------
+<?php
+$m = new MongoClient();
+echo "Connected to database successfully.";
+$db = $m->MYDB;
+echo "\nDatabase selected successfully.";
+$col = $db->MyCol;
+
+$col->remove(array("name" => "Aarush"));
+echo "\nDocument deleted successfully.";
+?>
+
+RUN
+---
+Start Apache in XAMPP.
+Open:
+    http://localhost/yourfilename.php
+
+VERIFY IN MONGO
+---------------
+use MYDB
+db.MyCol.find()

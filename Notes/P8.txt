@@ -1,0 +1,113 @@
+PRACTICAL 8 - BASIC jQUERY
+==========================
+
+SOURCE TOPICS
+-------------
+1. Check contents on button click
+2. Select by class, id and element name
+3. click(), hover(), on(), trigger(), off()
+4. Show/hide effect
+5. Toggle effect
+6. Fading effects
+7. Sliding effects
+8. Additional basic jQuery operations in the supplied file
+
+BASIC HTML TEMPLATE
+-------------------
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="jquery-3.3.1.min.js"></script>
+</head>
+<body>
+  <!-- content -->
+</body>
+</html>
+
+1. BUTTON CLICK
+---------------
+<script>
+$(document).ready(function(){
+  $("#btn").click(function(){
+    document.write("Hello Aarush");
+  });
+});
+</script>
+
+2. SELECTORS
+------------
+$(".class1").css("background","lightblue");
+$("#id1").css("background","pink");
+$("h2").css("background","lightgreen");
+
+3. EVENTS
+---------
+$("#b1").click(function(){
+    // code
+});
+
+$("#b1").hover(function(){
+    // code
+});
+
+$("p").on("click", function(){
+    $(this).css("background","yellow");
+});
+
+$("p").off("click");
+
+$("#b4").click(function(){
+    $("input").trigger("select");
+});
+
+4. SHOW / HIDE
+--------------
+$("p").hide();
+$("p").show();
+
+5. TOGGLE
+---------
+$("p").toggle();
+
+6. FADE
+-------
+$("p").fadeIn();
+$("p").fadeOut();
+$("p").fadeToggle();
+
+7. SLIDE
+--------
+$("p").slideUp();
+$("p").slideDown();
+$("p").slideToggle();
+
+FULL SIMPLE SHOW/HIDE EXAMPLE
+-----------------------------
+<!DOCTYPE html>
+<html>
+<head>
+<script src="jquery-3.3.1.min.js"></script>
+<script>
+$(document).ready(function() {
+  $("#b1").click(function() {
+    $("p").hide();
+  });
+  $("#b2").click(function() {
+    $("p").show();
+  });
+});
+</script>
+</head>
+<body>
+<p>Welcome to MCC</p>
+<button id="b1">Hide</button>
+<button id="b2">Show</button>
+</body>
+</html>
+
+EXECUTION
+---------
+Save as:
+    practical8.html
+
+Open the HTML file in a browser.

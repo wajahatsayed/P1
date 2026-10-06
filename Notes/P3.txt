@@ -1,0 +1,114 @@
+PRACTICAL 3 - AGGREGATION
+=========================
+
+SOURCE PRACTICAL TOPICS
+-----------------------
+- Insert collection and display all records
+- Group by function to get count
+- Sum
+- Avg
+- Min
+- Max
+- First
+- Last
+- addToSet
+- push
+
+SETUP DATA
+----------
+use BDNS
+
+db.sales.insertMany([
+  {name:"Aarush", dept:"IT", city:"Mumbai", marks:80, subject:"DBNS"},
+  {name:"Rahul", dept:"IT", city:"Pune", marks:90, subject:"DBNS"},
+  {name:"Neha", dept:"CS", city:"Mumbai", marks:85, subject:"CN"},
+  {name:"Amit", dept:"IT", city:"Mumbai", marks:90, subject:"DBNS"}
+])
+
+DISPLAY
+-------
+db.sales.find()
+
+GROUP + COUNT
+-------------
+db.sales.aggregate([
+  {$group:{_id:"$dept", count:{$sum:1}}}
+])
+
+SUM
+---
+db.sales.aggregate([
+  {$group:{_id:null, totalMarks:{$sum:"$marks"}}}
+])
+
+SUM BY DEPARTMENT
+-----------------
+db.sales.aggregate([
+  {$group:{_id:"$dept", totalMarks:{$sum:"$marks"}}}
+])
+
+AVERAGE
+-------
+db.sales.aggregate([
+  {$group:{_id:null, averageMarks:{$avg:"$marks"}}}
+])
+
+MINIMUM
+-------
+db.sales.aggregate([
+  {$group:{_id:null, minimumMarks:{$min:"$marks"}}}
+])
+
+MAXIMUM
+-------
+db.sales.aggregate([
+  {$group:{_id:null, maximumMarks:{$max:"$marks"}}}
+])
+
+FIRST
+-----
+db.sales.aggregate([
+  {$group:{_id:"$dept", firstStudent:{$first:"$name"}}}
+])
+
+LAST
+----
+db.sales.aggregate([
+  {$group:{_id:"$dept", lastStudent:{$last:"$name"}}}
+])
+
+IMPORTANT:
+$first and $last depend on the order of documents entering the group.
+Use $sort before $group when a particular order is required.
+
+PUSH
+----
+db.sales.aggregate([
+  {$group:{_id:"$dept", students:{$push:"$name"}}}
+])
+
+ADDTOSET
+--------
+db.sales.aggregate([
+  {$group:{_id:"$dept", cities:{$addToSet:"$city"}}}
+])
+
+KEY DIFFERENCE
+--------------
+$push     -> allows duplicate values
+$addToSet -> removes duplicates
+
+COMMON FULL PATTERN
+-------------------
+db.sales.aggregate([
+  {$group:{
+    _id:"$dept",
+    count:{$sum:1},
+    total:{$sum:"$marks"},
+    average:{$avg:"$marks"},
+    minimum:{$min:"$marks"},
+    maximum:{$max:"$marks"},
+    students:{$push:"$name"},
+    cities:{$addToSet:"$city"}
+  }}
+])
